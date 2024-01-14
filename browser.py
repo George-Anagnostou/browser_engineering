@@ -9,12 +9,15 @@ class URL:
             self.port = 80
         elif self.scheme == "https":
             self.port = 443
+
         if "/" not in url:
             url = url + "/"
         self.host, url = url.split("/", 1)
+
         if ":" in self.host:
             self.host, port = self.host.split(":", 1)
             self.port = int(port)
+
         self.path = "/" + url
 
     def request(self):
@@ -24,14 +27,18 @@ class URL:
             proto=socket.IPPROTO_TCP,
         )
 
-        s.connect((self.host, self.port))
         if self.scheme == "https":
             ctx = ssl.create_default_context()
             s = ctx.wrap_socket(s, server_hostname=self.host)
 
-        s.send(("GET {} HTTP/1.0\r\n".format(self.path) + \
-                "Host: {}\r\n\r\n".format(self.host)) \
-                .encode("utf8"))
+        s.connect((self.host, self.port))
+
+        connection_string = f"GET {self.path} HTTP/1.1\r\n".format(self.path) + \
+                "Host: {}\r\n".format(self.host) + \
+                "Connection: close" + \
+                "User-Agent: snake-eyes/0.1 (custom)\r\n\r\n"
+
+        s.send((connection_string).encode("utf8"))
 
         response = s.makefile("r", encoding="utf8", newline="\r\n")
         statusline = response.readline()
