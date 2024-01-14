@@ -68,6 +68,15 @@ class URL:
         return body
 
     def show(body):
+        entities = {
+            "&lt;": "<",
+            "&gt;": ">",
+            "&copy;": "©",
+            "&ndash;": "–",
+            "&amp;": "&",
+        }
+
+        body_string = ""
         in_tag = False
         for c in body:
             if c == "<":
@@ -75,7 +84,20 @@ class URL:
             elif c == ">":
                 in_tag = False
             elif not in_tag:
-                print(c, end="")
+                # print(c, end="")
+                body_string += c
+
+        # for line in body_string.splitlines():
+        #     for word in line.split(" "):
+        #         word = word.strip()
+        #         if word in entities:
+        #             # print(entities[word])
+        #             body_string.replace(word, entities[word])
+
+        for entity in entities.keys():
+            body_string = body_string.replace(entity, entities[entity])
+
+        print(body_string)
 
     def load(url):
         body = url.request()
