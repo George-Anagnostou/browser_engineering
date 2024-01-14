@@ -4,7 +4,7 @@ import ssl
 class URL:
     def __init__(self, url):
         self.scheme, url = url.split("://", 1)
-        assert self.scheme in ["http", "https", "file"]
+        assert self.scheme in ["http", "https", "file", "data"]
         if self.scheme == "http":
             self.port = 80
         elif self.scheme == "https":
@@ -33,6 +33,10 @@ class URL:
             with open(self.path, "r") as f:
                 body = f.read()
                 return body
+
+        if self.scheme == "data":
+            header, body = self.path.split(",", 1)
+            return body
 
         if self.scheme == "https":
             ctx = ssl.create_default_context()
@@ -86,5 +90,4 @@ if __name__ == "__main__":
         path = "file://"
         path += os.path.abspath("sample.html")
 
-    print(f"Path = {path}")
     URL.load(URL(path))
