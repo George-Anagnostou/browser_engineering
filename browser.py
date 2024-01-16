@@ -4,6 +4,11 @@ import ssl
 class URL:
     def __init__(self, url):
         self.scheme, url = url.split("://", 1)
+        self.view_source = False
+        if ":" in self.scheme:
+            string, self.scheme = self.scheme.split(":", 1)
+            if string == "view-source":
+                self.view_source = True
         assert self.scheme in ["http", "https", "file", "data"]
         if self.scheme == "http":
             self.port = 80
@@ -15,7 +20,8 @@ class URL:
         self.host, url = url.split("/", 1)
 
         if self.host == "/" and self.scheme == "file":
-            self.host = "127.0.0.1"
+            # self.host = "127.0.0.1"
+            self.host = "localhost"
         if ":" in self.host:
             self.host, port = self.host.split(":", 1)
             self.port = int(port)
@@ -62,12 +68,20 @@ class URL:
         assert "transfer-encoding" not in response_headers
         assert "content-encoding" not in response_headers
 
+        charset = "utf-8"
+        for header in response_headers:
+            if header == "content-type" and ";" in response_headers[header]:
+                format, charset = response_headers["content-type"].split(";", 1)
+                _, charset = charset.split("=", 1)
+
         body = response.read()
+        print(charset)
+        body.encode(charset)
         s.close()
 
         return body
 
-    def show(body):
+    def show(url):
         entities = {
             "&lt;": "<",
             "&gt;": ">",
@@ -77,31 +91,27 @@ class URL:
         }
 
         body_string = ""
-        in_tag = False
-        for c in body:
-            if c == "<":
-                in_tag = True
-            elif c == ">":
-                in_tag = False
-            elif not in_tag:
-                # print(c, end="")
-                body_string += c
+        if not url.view_source:
+            in_tag = False
+            for c in url.request():
+                if c == "<":
+                    in_tag = True
+                elif c == ">":
+                    in_tag = False
+                elif not in_tag:
+                    body_string += c
+            for entity in entities.keys():
+                body_string = body_string.replace(entity, entities[entity])
+        else:
+            body_string = url.request()
 
-        # for line in body_string.splitlines():
-        #     for word in line.split(" "):
-        #         word = word.strip()
-        #         if word in entities:
-        #             # print(entities[word])
-        #             body_string.replace(word, entities[word])
-
-        for entity in entities.keys():
-            body_string = body_string.replace(entity, entities[entity])
 
         print(body_string)
 
     def load(url):
-        body = url.request()
-        URL.show(body)
+        # body = url.request()
+        # URL.show(body)
+        URL.show(url)
 
 if __name__ == "__main__":
     import sys
